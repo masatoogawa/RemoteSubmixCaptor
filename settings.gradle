@@ -1,0 +1,2 @@
+include ':app', ':totalaudiocaptor'
+rootProject.name='RemoteSubmixCaptor'
