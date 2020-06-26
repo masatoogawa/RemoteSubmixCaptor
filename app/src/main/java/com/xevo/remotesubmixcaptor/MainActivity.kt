@@ -1,14 +1,12 @@
 package com.xevo.remotesubmixcaptor
 
-import android.media.*
 import android.os.Bundle
 import android.os.Environment
-import android.os.Looper
-import android.util.Log
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import com.xevo.totalaudiocaptor.TotalAudioCaptor
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -16,33 +14,31 @@ import permissions.dispatcher.NeedsPermission
 import permissions.dispatcher.RuntimePermissions
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.max
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 @RuntimePermissions
 class MainActivity : AppCompatActivity() {
 
-    private val samplingRate = 44100
-    private val fps = 10
-    private val samplingNumPerFrame = samplingRate / fps
-    private val frameSizeInBytes = samplingNumPerFrame * 2 * 2
-    private var audioRecord: AudioRecord? = null
     private val fileName = "test.pcm"
-    private val audioBufferSizeInBytes = max(samplingNumPerFrame * 10,
-        AudioRecord.getMinBufferSize(samplingRate, AudioFormat.CHANNEL_IN_STEREO,
-            AudioFormat.ENCODING_PCM_16BIT))
     private var file: FileOutputStream? = null
-    private var audioTrack: AudioTrack? = null
+    private var totalAudioCaptor: TotalAudioCaptor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
+
+        totalAudioCaptor = TotalAudioCaptor()
 
         recordButton.setOnClickListener {
             startRecordingWithPermissionCheck()
@@ -57,65 +53,18 @@ class MainActivity : AppCompatActivity() {
         android.Manifest.permission.RECORD_AUDIO,
         android.Manifest.permission.CAPTURE_AUDIO_OUTPUT)
     fun startRecording() {
-
         val dir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         file = File(dir, fileName).outputStream()
-
-        val bufferSize = AudioTrack.getMinBufferSize(samplingRate,
-            AudioFormat.CHANNEL_OUT_STEREO,
-            AudioFormat.ENCODING_PCM_16BIT)
-
-        audioTrack = AudioTrack.Builder()
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                    //.setContentType(AudioAttributes.CON)
-                    .build()
-            )
-            .setAudioFormat(AudioFormat.Builder()
-                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                .setSampleRate(samplingRate)
-                .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
-                .build()
-            )
-            .setBufferSizeInBytes(bufferSize)
-            .build()
-
-
-        val audioDataArray = ByteArray(frameSizeInBytes)
-        audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.REMOTE_SUBMIX,
-            samplingRate,
-            AudioFormat.CHANNEL_IN_STEREO,
-            AudioFormat.ENCODING_PCM_16BIT,
-            audioBufferSizeInBytes).apply {
-
-            positionNotificationPeriod = samplingNumPerFrame
-            setRecordPositionUpdateListener(object: AudioRecord.OnRecordPositionUpdateListener {
-                override fun onPeriodicNotification(recorder: AudioRecord?) {
-
-                    val ret = recorder?.read(audioDataArray, 0, frameSizeInBytes)
-                    ret?.let {
-                        file?.write(audioDataArray, 0, it)
-                        audioTrack?.write(audioDataArray, 0 ,audioDataArray.size)
-                    }
-                    Log.d("mogawa", "read=$ret")
-                }
-
-                override fun onMarkerReached(recorder: AudioRecord?) {
-                }
-            })
-            startRecording()
+        totalAudioCaptor?.callback = object : TotalAudioCaptor.Callback {
+            override fun onReceive(boxedByteArray: TotalAudioCaptor.BoxedByteArray) {
+                file?.write(boxedByteArray.bytearray, 0, boxedByteArray.bytearray.size)
+            }
         }
-
-        audioTrack?.play()
+        totalAudioCaptor?.startRecording()
     }
 
     fun stopRecording() {
-        audioRecord?.stop()
-        audioRecord = null
-        audioTrack?.stop()
-        audioTrack = null
+        totalAudioCaptor?.stopRecording()
         file?.close()
         file = null
     }
