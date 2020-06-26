@@ -2,11 +2,10 @@ package com.xevo.remotesubmixcaptor
 
 import android.os.Bundle
 import android.os.Environment
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import com.xevo.totalaudiocaptor.TotalAudioCaptor
+import com.xevo.totalaudiocaptor.AllAudioCaptor
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -15,30 +14,19 @@ import permissions.dispatcher.RuntimePermissions
 import java.io.File
 import java.io.FileOutputStream
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
-
 @RuntimePermissions
 class MainActivity : AppCompatActivity() {
 
     private val fileName = "test.pcm"
     private var file: FileOutputStream? = null
-    private var totalAudioCaptor: TotalAudioCaptor? = null
+    private var allAudioCaptor: AllAudioCaptor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }
-
-        totalAudioCaptor = TotalAudioCaptor()
+        allAudioCaptor = AllAudioCaptor()
 
         recordButton.setOnClickListener {
             startRecordingWithPermissionCheck()
@@ -55,16 +43,16 @@ class MainActivity : AppCompatActivity() {
     fun startRecording() {
         val dir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         file = File(dir, fileName).outputStream()
-        totalAudioCaptor?.callback = object : TotalAudioCaptor.Callback {
-            override fun onReceive(boxedByteArray: TotalAudioCaptor.BoxedByteArray) {
+        allAudioCaptor?.callback = object : AllAudioCaptor.Callback {
+            override fun onReceive(boxedByteArray: AllAudioCaptor.BoxedByteArray) {
                 file?.write(boxedByteArray.bytearray, 0, boxedByteArray.bytearray.size)
             }
         }
-        totalAudioCaptor?.startRecording()
+        allAudioCaptor?.startRecording()
     }
 
     fun stopRecording() {
-        totalAudioCaptor?.stopRecording()
+        allAudioCaptor?.stopRecording()
         file?.close()
         file = null
     }
