@@ -1,11 +1,11 @@
-package com.xevo.remotesubmixcaptor
+package com.xevo.sample
 
 import android.os.Bundle
 import android.os.Environment
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import com.xevo.totalaudiocaptor.AllAudioCaptor
+import com.xevo.remotesubmixcaptor.RemoteSubmixCaptor
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -19,14 +19,14 @@ class MainActivity : AppCompatActivity() {
 
     private val fileName = "test.pcm"
     private var file: FileOutputStream? = null
-    private var allAudioCaptor: AllAudioCaptor? = null
+    private var remoteSubmixCaptor: RemoteSubmixCaptor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        allAudioCaptor = AllAudioCaptor()
+        remoteSubmixCaptor = RemoteSubmixCaptor()
 
         recordButton.setOnClickListener {
             startRecordingWithPermissionCheck()
@@ -43,16 +43,16 @@ class MainActivity : AppCompatActivity() {
     fun startRecording() {
         val dir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         file = File(dir, fileName).outputStream()
-        allAudioCaptor?.callback = object : AllAudioCaptor.Callback {
-            override fun onReceive(boxedByteArray: AllAudioCaptor.BoxedByteArray) {
+        remoteSubmixCaptor?.callback = object : RemoteSubmixCaptor.Callback {
+            override fun onReceive(boxedByteArray: RemoteSubmixCaptor.BoxedByteArray) {
                 file?.write(boxedByteArray.bytearray, 0, boxedByteArray.bytearray.size)
             }
         }
-        allAudioCaptor?.startRecording()
+        remoteSubmixCaptor?.startRecording()
     }
 
     fun stopRecording() {
-        allAudioCaptor?.stopRecording()
+        remoteSubmixCaptor?.stopRecording()
         file?.close()
         file = null
     }

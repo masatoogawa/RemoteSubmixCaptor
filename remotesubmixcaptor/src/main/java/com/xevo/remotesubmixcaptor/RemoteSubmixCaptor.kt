@@ -1,9 +1,9 @@
-package com.xevo.totalaudiocaptor
+package com.xevo.remotesubmixcaptor
 
 import android.media.*
 import kotlin.math.max
 
-class AllAudioCaptor {
+class RemoteSubmixCaptor {
 
     class BoxedByteArray(ba: ByteArray) {
         var bytearray: ByteArray = ba

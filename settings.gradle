@@ -1,2 +1,2 @@
-include ':app', ':allaudiocaptor'
+include ':app', ':remotesubmixcaptor'
 rootProject.name='RemoteSubmixCaptor'

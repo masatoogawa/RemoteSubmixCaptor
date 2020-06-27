@@ -1,4 +1,4 @@
-package com.xevo.totalaudiocaptor
+package com.xevo.sample
 
 import org.junit.Test
 
